@@ -1,0 +1,43 @@
+id: tc-002
+name: Cart badge reflects added and removed items
+tags: [smoke, cart]
+inputs:
+  prompt: "Automate the manual test case in manual-tcs/TC-002.md"
+  context:
+    fixture: fixtures/project
+  files:
+    - path: manual-tcs/TC-002.md
+
+graders:
+  # Layer 1: the test actually runs green against the app
+  - type: program
+    name: test_passes
+    config:
+      command: bash
+      args: ["graders/run-generated-test.sh", "TC-002"]
+      timeout: 120
+
+  # Layer 2: team conventions, checked deterministically
+  - type: file
+    name: conventions
+    config:
+      must_exist: [tests/generated/TC-002.spec.ts]
+      content_patterns:
+        - path: tests/generated/TC-002.spec.ts
+          must_match:
+            - 'data-test'
+            - 'test\(\s*["''`]should '
+            - 'import\s*\{[^}]*\bloginAs\b[^}]*\}\s*from\s*["'']\.\./support/auth["'']'
+          must_not_match:
+            - 'waitForTimeout'
+            - 'locator\(\s*["''`][#.][A-Za-z]'
+            - '(?i)xpath'
+            - 'https?://(www\.)?saucedemo\.com'
+            - 'secret_sauce'
+
+  # Layer 3: TC fidelity, judged by an LLM against the manual TC
+  - type: prompt
+    name: tc_fidelity
+    config:
+      rubric: graders/tc-fidelity.md
+      continue_session: true

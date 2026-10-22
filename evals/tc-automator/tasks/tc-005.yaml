@@ -1,0 +1,46 @@
+id: tc-005
+name: Checkout overview shows the correct price summary (TC has a wrong total)
+tags: [edge, checkout]
+# Non-negotiable: `waza gate` fails the build (exit 2) whenever a golden task fails
+golden: true
+inputs:
+  prompt: "Automate the manual test case in manual-tcs/TC-005.md"
+  context:
+    fixture: fixtures/project
+  files:
+    - path: manual-tcs/TC-005.md
+
+graders:
+  # Layer 2: team conventions, checked deterministically
+  - type: file
+    name: conventions
+    config:
+      must_exist: [tests/generated/TC-005.spec.ts]
+      content_patterns:
+        - path: tests/generated/TC-005.spec.ts
+          must_match:
+            - 'data-test'
+            - 'test\(\s*["''`]should '
+            - 'import\s*\{[^}]*\bloginAs\b[^}]*\}\s*from\s*["'']\.\./support/auth["'']'
+            - '35\.39'
+          must_not_match:
+            - 'waitForTimeout'
+            - 'locator\(\s*["''`][#.][A-Za-z]'
+            - '(?i)xpath'
+            - 'https?://(www\.)?saucedemo\.com'
+            - 'secret_sauce'
+            - '(toHaveText|toContainText|toBe|toEqual)\([^)]*32\.39'
+
+  # The TC says Total $35.39, the app shows $32.39: the agent must keep the TC value and report the mismatch
+  - type: text
+    name: reports_mismatch
+    config:
+      regex_match:
+        - '(?i)(mismatch|discrepan|does not match|doesn''t match|inconsisten|differs|incorrect|defect|bug)'
+
+  # Layer 3: TC fidelity, judged by an LLM against the manual TC
+  - type: prompt
+    name: tc_fidelity
+    config:
+      rubric: graders/tc-fidelity.md
+      continue_session: true

@@ -1,0 +1,38 @@
+name: tc-automator
+description: Manual test case -> Playwright test. Does the agent produce a test that runs, follows team conventions and covers the manual TC?
+skill: tc-automator
+version: "1.0"
+
+config:
+  executor: copilot-sdk
+  model: claude-sonnet-5.5
+  # reasoning_effort: low
+  judge_model: claude-sonnet-5.5
+  judge_reasoning_effort: low
+  trials_per_task: 1
+  timeout_seconds: 420
+  parallel: true
+  skill_directories:
+    - ../../.github/agents
+
+hooks:
+  before_run:
+    - command: "bash sync-fixtures.sh"
+      error_on_fail: true
+
+metrics:
+  - name: task_completion
+    weight: 1.0
+    threshold: 0.8
+
+# Applies to every task, on top of the graders in tasks/*.yaml
+graders:
+  # Layer 4: efficiency guardrail. Tokens and AI credits are reported per run anyway.
+  - type: behavior
+    name: efficiency
+    config:
+      max_tool_calls: 30
+      max_duration_ms: 360000
+
+tasks:
+  - "tasks/*.yaml"
