@@ -5,7 +5,8 @@ version: "1.0"
 
 config:
   executor: copilot-sdk
-  model: claude-sonnet-5.5
+  # Decision from the model matrix (GUIDE.md §8): same pass rate as Sonnet 5.5 at ~1/10 of the agent cost
+  model: claude-haiku-5.5
   # reasoning_effort: low
   judge_model: claude-sonnet-5.5
   judge_reasoning_effort: low
